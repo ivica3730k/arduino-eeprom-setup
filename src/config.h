@@ -32,6 +32,13 @@ namespace config
 
 }; // namespace config
 
+struct WIFI_DETAILS
+{
+    String ssid;
+    String passwd;
+};
+
+
 struct MQTT_PARAMS
 {
     String mqttServerAddress;
@@ -47,6 +54,8 @@ class Configuration
 {
 public:
     Configuration();
+    bool write_wifi_details(String ssid, String passwd);
+    WIFI_DETAILS get_wifi_details();
     bool write_mqtt_configuration(String mqttServerAddress,
                                   bool useAuthentication,
                                   String mqttUserName,

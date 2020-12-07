@@ -4,6 +4,36 @@ Configuration::Configuration()
 {
 }
 
+bool Configuration::write_wifi_details(String ssid, String passwd)
+{
+    config::WIFI_DETAILS conf;
+    if (ssid.length() > sizeof(conf.ssid))
+    {
+        return false;
+    }
+    ssid.toCharArray(conf.ssid, sizeof(conf.ssid));
+    if (passwd.length() > sizeof(conf.passwd))
+    {
+        return false;
+    }
+    passwd.toCharArray(conf.passwd, sizeof(conf.passwd));
+    char buffer[sizeof(conf)];
+    memcpy(&buffer, &conf, sizeof(conf));
+    writeEEPROM(0, buffer, sizeof(buffer));
+    return true;
+}
+
+WIFI_DETAILS Configuration::get_wifi_details()
+{
+    char buffer[sizeof(config::WIFI_DETAILS)];
+    readEEPROM(0, buffer, sizeof(config::WIFI_DETAILS));
+    config::WIFI_DETAILS wifi_parameters_binary;
+    memcpy(&wifi_parameters_binary, &buffer, sizeof(config::WIFI_DETAILS));
+    WIFI_DETAILS wifi_parameters;
+    wifi_parameters.ssid = String(wifi_parameters_binary.ssid);
+    wifi_parameters.passwd = String(wifi_parameters_binary.passwd);
+    return wifi_parameters;
+}
 bool Configuration::write_mqtt_configuration(String mqttServerAddress,
                                              bool useAuthentication,
                                              String mqttUserName,

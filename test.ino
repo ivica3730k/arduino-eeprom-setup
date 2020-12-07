@@ -1,6 +1,18 @@
 #include <AUnit.h>
 #include "src/config.h"
 
+test(eeprom_write_read_wifi_details)
+{
+    Configuration cfg;
+    WIFI_DETAILS in;
+    in.ssid = "Test SSID";
+    in.passwd = "Test PASSWD";
+    cfg.write_wifi_details(in.ssid, in.passwd);
+    WIFI_DETAILS out = cfg.get_wifi_details();
+    assertEqual(in.ssid, out.ssid);
+    assertEqual(in.passwd, out.passwd);
+}
+
 test(eeprom_write_read_mqtt_config)
 {
     Configuration cfg;
@@ -27,6 +39,65 @@ test(eeprom_write_read_mqtt_config)
     assertEqual(in.red_mqtt_topic, out.red_mqtt_topic);
     assertEqual(in.green_mqtt_topic, out.green_mqtt_topic);
     assertEqual(in.blue_mqtt_topic, out.blue_mqtt_topic);
+}
+
+test(full_eeprom_write_test)
+{
+    Configuration cfg;
+    WIFI_DETAILS in;
+    in.ssid = "Test SSID";
+    in.passwd = "Test PASSWD";
+    cfg.write_wifi_details(in.ssid, in.passwd);
+    MQTT_PARAMS mqtt_in;
+    mqtt_in.mqttServerAddress = "Test address";
+    mqtt_in.useAuthentication = true;
+    mqtt_in.mqttUserName = "Test username";
+    mqtt_in.mqttPassword = "Test password";
+    mqtt_in.red_mqtt_topic = "Test red mqtt topic";
+    mqtt_in.green_mqtt_topic = "Test green mqtt topic";
+    mqtt_in.blue_mqtt_topic = "Test blue mqtt topic";
+    cfg.write_mqtt_configuration(mqtt_in.mqttServerAddress,
+                                 mqtt_in.useAuthentication,
+                                 mqtt_in.mqttUserName,
+                                 mqtt_in.mqttPassword,
+                                 mqtt_in.red_mqtt_topic,
+                                 mqtt_in.green_mqtt_topic,
+                                 mqtt_in.blue_mqtt_topic);
+    WIFI_DETAILS wifi_out = cfg.get_wifi_details();
+    assertEqual(in.ssid, wifi_out.ssid);
+    assertEqual(in.passwd, wifi_out.passwd);
+    MQTT_PARAMS mqtt_out = cfg.get_mqtt_configuration();
+    assertEqual(mqtt_in.mqttServerAddress, mqtt_out.mqttServerAddress);
+    assertEqual(mqtt_in.useAuthentication, mqtt_out.useAuthentication);
+    assertEqual(mqtt_in.mqttUserName, mqtt_out.mqttUserName);
+    assertEqual(mqtt_in.mqttPassword, mqtt_out.mqttPassword);
+    assertEqual(mqtt_in.red_mqtt_topic, mqtt_out.red_mqtt_topic);
+    assertEqual(mqtt_in.green_mqtt_topic, mqtt_out.green_mqtt_topic);
+    assertEqual(mqtt_in.blue_mqtt_topic, mqtt_out.blue_mqtt_topic);
+}
+
+test(fail_write_read_wifi_details_ssid_to_big)
+{
+    Configuration cfg;
+    WIFI_DETAILS in;
+    in.ssid = "Text  to big this should \
+                fail lorem ipsum dolor si amet lorem \
+                ipsum dolor si amet fail this please";
+    in.passwd = "Test PASSWD";
+    bool status = cfg.write_wifi_details(in.ssid, in.passwd);
+    assertFalse(status);
+}
+
+test(fail_write_read_wifi_details_passwd_to_big)
+{
+    Configuration cfg;
+    WIFI_DETAILS in;
+    in.ssid = "Test SSID";
+    in.passwd = "Text  to big this should \
+                fail lorem ipsum dolor si amet lorem \
+                ipsum dolor si amet fail this please";
+    bool status = cfg.write_wifi_details(in.ssid, in.passwd);
+    assertFalse(status);
 }
 
 test(fail_write_mqtt_config_server_address_to_big)
@@ -181,7 +252,7 @@ void setup()
     {
         /* code */
     }
-
+    EEPROM.begin(512);
     Serial.println("Starting tests!\n\n");
 }
 
